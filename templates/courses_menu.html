@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Courses - SmartSMS</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  {% include 'sidebar.html' %}
+
+  <div class="main-content">
+    <header class="top-nav">
+      <h1>Course Management</h1>
+    </header>
+
+    <div class="attendance-menu">
+      <a class="glow-btn btn-large" href="{{ url_for('courses.courses_update') }}">Add / Update Course</a>
+      <a class="glow-btn btn-large" href="{{ url_for('courses.courses_view') }}">View Courses</a>
+    </div>
+  </div>
+</body>
+</html>

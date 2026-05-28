@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View Attendance - SmartSMS</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  {% include 'sidebar.html' %}
+
+  <div class="main-content attendance-view">
+    <header class="top-nav">
+      <h1>View Attendance</h1>
+    </header>
+    <div class="attendance-panel attendance-view-panel">
+      <form method="GET" action="{{ url_for('attendance.attendance_view') }}">
+        <div class="form-row">
+          <label for="report-date">Select Date</label>
+          <input id="report-date" type="date" name="report_date" value="{{ selected_date }}" required>
+          <button type="submit" class="glow-btn">Show</button>
+        </div>
+      </form>
+
+      <div class="attendance-summary">
+        <p><strong>Date:</strong> {{ selected_date }}</p>
+        <p><strong>Total students:</strong> {{ total_students }}</p>
+        <p><strong>Present:</strong> {{ present_count }}</p>
+        <p><strong>Absent:</strong> {{ absent_count }}</p>
+        <p><strong>Present %:</strong> {{ present_average }}%</p>
+        <p><strong>Absent %:</strong> {{ absent_average }}%</p>
+      </div>
+
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr>
+            <td>{{ student.name }}</td>
+            <td>
+              {% set record = attendance_map[student._id|string] if attendance_map is defined else None %}
+              {% if record %}
+                {{ record.status }}
+              {% else %}
+                Not marked
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fees - SmartSMS</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  <div class="glass-sidebar">
+    <div class="logo">🎓 SmartSMS</div>
+    <nav>
+      <a href="/dashboard">🏠 Dashboard</a>
+      <a href="/courses">📚 Courses</a>
+      <a href="/students">👥 Students</a>
+      <a href="/attendance">📅 Attendance</a>
+      <a href="/marks" class="active">📊 Marks</a>
+      <a href="/fees">💰 Fees</a>
+      <a href="/analytics">📈 Analytics</a>
+      <a href="/profile">👤 Profile</a>
+      <a href="/logout">🚪 Logout</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <header class="top-nav">
+      <h1>Fees</h1>
+    </header>
+
+    <div class="glass-card">
+      <h2>Fees Management</h2>
+      <div class="attendance-menu">
+        <a class="glow-btn btn-large" href="{{ url_for('fees.fees_update') }}">Add / Update Fees</a>
+        <a class="glow-btn btn-large" href="{{ url_for('fees.fees_view') }}">View Fees</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

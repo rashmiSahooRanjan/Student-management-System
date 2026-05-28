@@ -1,0 +1,171 @@
+/* static/css/dashboard.css */
+@import url('style.css');
+
+.main-content {
+    margin-left: 260px;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.glass-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100vh;
+    padding: 2rem 1rem;
+    overflow-y: auto;
+}
+
+.glass-sidebar nav a {
+    display: block;
+    padding: 14px 20px;
+    color: #ddd;
+    text-decoration: none;
+    border-radius: 12px;
+    margin: 6px 0;
+    transition: 0.3s;
+}
+
+.glass-sidebar nav a:hover,
+.glass-sidebar nav a.active {
+    background: rgba(0, 245, 255, 0.15);
+    color: #00f5ff;
+    transform: translateX(10px);
+}
+
+/* Top Navigation */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.top-nav h1 {
+    font-size: 2.2rem;
+    color: #fff;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.8rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card h3 {
+    font-size: 1.1rem;
+    opacity: 0.8;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card h2 {
+    font-size: 2.8rem;
+    color: #00f5ff;
+}
+
+/* Tables */
+.glass-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+}
+
+.glass-table th, .glass-table td {
+    padding: 1.2rem;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.glass-table th {
+    background: rgba(255,255,255,0.05);
+    color: #00f5ff;
+}
+
+/* Chart Container */
+.chart-container, .chart-box {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    height: 420px;
+}
+
+/* Animations */
+@keyframes glow {
+    from { text-shadow: 0 0 10px #00f5ff; }
+    to { text-shadow: 0 0 30px #00f5ff, 0 0 40px #ff00ff; }
+}
+
+.counter {
+    transition: all 2s ease;
+}
+
+.attendance-menu {
+    display: grid;
+    gap: 1.5rem;
+    max-width: 520px;
+    margin: 2rem auto;
+    text-align: center;
+}
+
+.attendance-menu .btn-large {
+    display: inline-block;
+    width: 100%;
+    padding: 1rem 1.4rem;
+    font-size: 1.05rem;
+    border-radius: 14px;
+}
+
+.attendance-panel {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 22px;
+    padding: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+.attendance-view .attendance-view-panel {
+    max-width: 1100px;
+}
+
+.form-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+.form-row label {
+    color: #dce9ff;
+    min-width: 140px;
+}
+
+.form-row input[type="date"] {
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+    min-width: 220px;
+}
+
+.attendance-summary {
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.4rem;
+    margin-bottom: 1.5rem;
+    display: grid;
+    gap: 0.85rem;
+}
+
+.attendance-summary p {
+    margin: 0;
+    color: #edf2ff;
+}
+
+.attendance-summary strong {
+    color: #00f5ff;
+}

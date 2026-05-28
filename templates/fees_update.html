@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add / Update Fees - SmartSMS</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  <div class="glass-sidebar">
+    <div class="logo">🎓 SmartSMS</div>
+    <nav>
+      <a href="/dashboard">🏠 Dashboard</a>
+      <a href="/courses">📚 Courses</a>
+      <a href="/students">👥 Students</a>
+      <a href="/attendance">📅 Attendance</a>
+      <a href="/marks" class="active">📊 Marks</a>
+      <a href="/fees">💰 Fees</a>
+      <a href="/analytics">📈 Analytics</a>
+      <a href="/profile">👤 Profile</a>
+      <a href="/logout">🚪 Logout</a>
+    </nav>
+  </div>
+
+  <div class="main-content">
+    <header class="top-nav">
+      <h1>Add / Update Fees</h1>
+      <a class="glow-btn" href="{{ url_for('fees.fees_view') }}">View Fees</a>
+    </header>
+
+    <div class="glass-card">
+      <h2>Add or update fee details</h2>
+      <form method="POST">
+        <div class="form-row">
+          <label for="student_id">Student</label>
+          <select id="student_id" name="student_id" required>
+            <option value="">Select student</option>
+            {% for student in students %}
+            <option value="{{ student._id }}">{{ student.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="course">Course / Class</label>
+          <input id="course" type="text" name="course" required>
+        </div>
+
+        <div class="form-row">
+          <label for="pending_amount">Pending Amount</label>
+          <input id="pending_amount" type="number" name="pending_amount" min="0" step="0.01" required>
+        </div>
+
+        <div class="form-row">
+          <label for="status">Status</label>
+          <select id="status" name="status" required>
+            <option value="Pending">Pending</option>
+            <option value="Paid">Paid</option>
+          </select>
+        </div>
+
+        <button type="submit" class="glow-btn">Save Fees</button>
+      </form>
+    </div>
+
+    <div class="glass-card">
+      <h2>Existing Fee Records</h2>
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Course</th>
+            <th>Pending</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          {% set fee = fee_map[student._id|string] if fee_map is defined else None %}
+          {% if fee %}
+          <tr>
+            <td>{{ student.name }}</td>
+            <td>{{ fee.course }}</td>
+            <td>₹{{ fee.pending_amount }}</td>
+            <td>{{ fee.status }}</td>
+            <td>{{ fee.updated_at.strftime('%Y-%m-%d %H:%M') if fee.updated_at else '-' }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

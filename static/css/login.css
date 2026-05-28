@@ -1,0 +1,42 @@
+/* static/css/login.css */
+@import url('style.css');
+
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #0f0c29, #302b63);
+}
+
+.glass-form {
+    width: 100%;
+    max-width: 420px;
+    padding: 3rem 2.5rem;
+    text-align: center;
+}
+
+.glass-form h1 {
+    margin-bottom: 2rem;
+    font-size: 2.4rem;
+    background: linear-gradient(90deg, #00f5ff, #ff00ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.glass-form input {
+    width: 100%;
+    padding: 16px;
+    margin: 12px 0;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 12px;
+    color: white;
+    font-size: 1.05rem;
+}
+
+.glass-form input:focus {
+    outline: none;
+    border-color: #00f5ff;
+    box-shadow: 0 0 15px rgba(0, 245, 255, 0.4);
+}

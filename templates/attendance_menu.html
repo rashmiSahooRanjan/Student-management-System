@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendance - SmartSMS</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  {% include 'sidebar.html' %}
+
+  <div class="main-content">
+    <header class="top-nav">
+      <h1>Attendance</h1>
+    </header>
+    <div class="attendance-menu">
+      <a class="glow-btn btn-large" href="{{ url_for('attendance.attendance_update') }}">Attendance Update</a>
+      <a class="glow-btn btn-large" href="{{ url_for('attendance.attendance_view') }}">View Attendance</a>
+    </div>
+  </div>
+</body>
+</html>

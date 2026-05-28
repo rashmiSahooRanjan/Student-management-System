@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Student - SmartSMS</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+  {% include 'sidebar.html' %}
+  <div class="main-content">
+    <h1>Add New Student</h1>
+    <form method="POST" enctype="multipart/form-data" class="glass-form">
+      <input type="text" name="name" placeholder="Full Name" required>
+      <input type="text" name="roll_no" placeholder="Roll Number" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="text" name="phone" placeholder="Phone Number" required>
+      <input type="text" name="course" placeholder="Course" required>
+      <input type="text" name="semester" placeholder="Semester" required>
+      <textarea name="address" placeholder="Address"></textarea>
+      <input type="file" name="photo" accept="image/*">
+      <button type="submit" class="glow-btn">Save Student</button>
+    </form>
+  </div>
+</body>
+</html>
