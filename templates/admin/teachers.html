@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+{% block title %}Teachers{% endblock %}
+{% block page_title %}Teacher Management{% endblock %}
+{% block page_subtitle %}Manage teaching staff accounts{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-chalkboard-teacher"></i> All Teachers</div>
+    <button class="btn btn-primary" onclick="openModal('addModal')"><i class="fas fa-plus"></i> Add Teacher</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="teacherBody"><tr><td colspan="5" style="text-align:center;padding:40px;color:#94a3b8">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add Teacher Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Teacher</div>
+      <button class="modal-close" onclick="closeModal('addModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" id="t_name" placeholder="Teacher's full name"></div>
+      <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="t_email" type="email" placeholder="teacher@school.com"></div>
+      <div class="form-group"><label class="form-label">Password *</label><input class="form-control" id="t_password" type="password" placeholder="Login password"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="addTeacher()"><i class="fas fa-user-plus"></i> Add Teacher</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadTeachers() {
+  const d = await api('/admin/api/teachers');
+  const tbody = document.getElementById('teacherBody');
+  if (!d.teachers.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">👩‍🏫</div><h4>No teachers yet</h4><p>Add your first teacher.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = d.teachers.map(t => `<tr>
+    <td>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;background:#ecfdf5;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#059669;font-weight:700;font-size:14px">${t.name[0].toUpperCase()}</div>
+        <strong>${t.name}</strong>
+      </div>
+    </td>
+    <td>${t.email}</td>
+    <td>${t.created_at||'—'}</td>
+    <td><span class="badge ${t.is_active!==false?'badge-green':'badge-red'}">${t.is_active!==false?'Active':'Inactive'}</span></td>
+    <td>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="delTeacher('${t._id}','${t.name}')" title="Remove"><i class="fas fa-trash"></i></button>
+    </td>
+  </tr>`).join('');
+}
+
+async function addTeacher() {
+  const name     = document.getElementById('t_name').value.trim();
+  const email    = document.getElementById('t_email').value.trim();
+  const password = document.getElementById('t_password').value;
+  if (!name || !email || !password) { toast('All fields required.', 'error'); return; }
+  try {
+    const r = await api('/admin/api/teachers', 'POST', {name, email, password});
+    toast(r.message); closeModal('addModal'); loadTeachers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function delTeacher(id, name) {
+  if (!confirm(`Remove teacher "${name}"?`)) return;
+  try {
+    const r = await api(`/admin/api/teachers/${id}`, 'DELETE');
+    toast(r.message, 'warning'); loadTeachers();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+loadTeachers();
+</script>
+{% endblock %}

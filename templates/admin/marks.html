@@ -1,0 +1,144 @@
+{% extends "admin/base.html" %}
+{% block title %}Marks{% endblock %}
+{% block page_title %}Marks &amp; Grades{% endblock %}
+{% block page_subtitle %}Manage student academic performance{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-plus-circle"></i> Add Marks</div></div>
+    <div class="card-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Student ID</label><input class="form-control" id="m_sid" placeholder="e.g. STU-2024-1234"></div>
+        <div class="form-group"><label class="form-label">Subject</label>
+          <select class="form-control" id="m_subject">
+            <option value="">Select Subject</option>
+            <option>Mathematics</option><option>Science</option><option>English</option><option>History</option><option>Computer Science</option><option>Physics</option><option>Chemistry</option><option>Biology</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Exam Type</label>
+          <select class="form-control" id="m_exam">
+            <option value="mid_term">Mid Term</option><option value="final">Final Exam</option><option value="unit_test">Unit Test</option><option value="assignment">Assignment</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Marks Obtained</label><input class="form-control" id="m_obtained" type="number" placeholder="e.g. 85"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Total Marks</label><input class="form-control" id="m_total" type="number" value="100"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addMarks()"><i class="fas fa-save"></i> Add Marks</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-search"></i> View Student Marks</div></div>
+    <div class="card-body">
+      <div class="form-group"><label class="form-label">Student ID</label><input class="form-control" id="view_sid" placeholder="Enter Student ID"></div>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="viewMarks()"><i class="fas fa-eye"></i> View Marks</button>
+      <div id="studentMarksInfo" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> Rank List</div></div>
+    <div class="table-wrap" id="ranklistWrap">
+      <div class="empty-state"><div class="icon">🏆</div><p>Loading…</p></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> Subject Averages</div></div>
+    <div class="card-body"><canvas id="subjectChart" height="260"></canvas></div>
+  </div>
+</div>
+
+<!-- Marks Detail Modal -->
+<div class="modal-overlay" id="marksModal">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">Student Marks Detail</div>
+      <button class="modal-close" onclick="closeModal('marksModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="marksModalBody"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function addMarks() {
+  const data = {
+    student_id:     document.getElementById('m_sid').value.trim(),
+    subject:        document.getElementById('m_subject').value,
+    exam_type:      document.getElementById('m_exam').value,
+    marks_obtained: parseFloat(document.getElementById('m_obtained').value),
+    total_marks:    parseFloat(document.getElementById('m_total').value),
+  };
+  if (!data.student_id || !data.subject || isNaN(data.marks_obtained)) { toast('Fill all fields.', 'error'); return; }
+  try {
+    const r = await api('/admin/api/marks/add', 'POST', data);
+    toast(r.message); loadRanklist(); loadSubjects();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function viewMarks() {
+  const sid = document.getElementById('view_sid').value.trim();
+  if (!sid) { toast('Enter a Student ID.', 'error'); return; }
+  try {
+    const d = await api(`/admin/api/marks/student/${sid}`);
+    const info = document.getElementById('studentMarksInfo');
+    info.innerHTML = `<div class="badge badge-blue" style="margin-bottom:12px">GPA: ${d.gpa}</div>`;
+    openModal('marksModal');
+    const body = document.getElementById('marksModalBody');
+    if (!d.marks.length) { body.innerHTML = '<div class="empty-state"><div class="icon">📊</div><h4>No marks found</h4></div>'; return; }
+    body.innerHTML = `<p style="margin-bottom:16px;color:#64748b;font-size:13px">GPA: <strong>${d.gpa}</strong></p>
+    <table><thead><tr><th>Subject</th><th>Exam</th><th>Obtained</th><th>Total</th><th>%</th><th>Grade</th><th></th></tr></thead>
+    <tbody>${d.marks.map(m=>`<tr>
+      <td>${m.subject}</td>
+      <td>${m.exam_type.replace('_',' ')}</td>
+      <td>${m.marks_obtained}</td>
+      <td>${m.total_marks}</td>
+      <td>${m.percentage}%</td>
+      <td><span class="grade ${gradeClass(m.grade)}">${m.grade}</span></td>
+      <td><button class="btn btn-danger btn-sm btn-icon" onclick="delMark('${m._id}')"><i class="fas fa-trash"></i></button></td>
+    </tr>`).join('')}</tbody></table>`;
+  } catch(e) { toast('Student not found or no marks.', 'error'); }
+}
+
+async function delMark(id) {
+  if (!confirm('Delete this mark?')) return;
+  await api(`/admin/api/marks/delete/${id}`, 'DELETE');
+  toast('Mark deleted.', 'warning');
+  viewMarks();
+}
+
+async function loadRanklist() {
+  const d = await api('/admin/api/marks/ranklist');
+  const wrap = document.getElementById('ranklistWrap');
+  if (!d.ranklist.length) { wrap.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>No data yet.</p></div>'; return; }
+  wrap.innerHTML = `<table><thead><tr><th>#</th><th>Name</th><th>Class</th><th>Avg %</th></tr></thead>
+  <tbody>${d.ranklist.map(r=>`<tr>
+    <td><span class="badge ${r.rank<=3?'badge-purple':'badge-gray'}">${r.rank}</span></td>
+    <td>${r.name}</td><td>${r.class||'—'}</td><td><strong>${r.avg}%</strong></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+
+async function loadSubjects() {
+  const d = await api('/admin/api/marks/subjects');
+  const canvas = document.getElementById('subjectChart');
+  if (window._subChart) window._subChart.destroy();
+  window._subChart = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: d.subjects.map(s=>s._id),
+      datasets: [{ label: 'Average %', data: d.subjects.map(s=>s.avg.toFixed(1)),
+        backgroundColor: ['#4f46e5','#059669','#f59e0b','#ef4444','#8b5cf6','#0ea5e9','#ec4899'],
+        borderRadius: 6 }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { max: 100, min: 0 }, x: { grid: { display: false } } } }
+  });
+}
+
+loadRanklist(); loadSubjects();
+</script>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "student/base.html" %}
+{% block title %}My Dashboard{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block page_subtitle %}Your personal academic overview{% endblock %}
+
+{% block content %}
+<!-- Profile incomplete alert -->
+<div id="profileAlert" style="display:none;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:16px 22px;margin-bottom:20px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:12px">
+    <i class="fas fa-exclamation-circle" style="font-size:22px;flex-shrink:0"></i>
+    <div>
+      <div style="font-weight:700">Your profile is incomplete</div>
+      <div style="font-size:13px;opacity:.9">Please fill in your details so admin and teachers can see your full information.</div>
+    </div>
+  </div>
+  <a href="/student/profile" class="btn" style="background:rgba(255,255,255,.25);color:#fff;border:1.5px solid rgba(255,255,255,.5)">
+    <i class="fas fa-edit"></i> Complete Profile
+  </a>
+</div>
+
+<!-- Welcome banner -->
+<div style="background:linear-gradient(135deg,#0284c7,#0ea5e9,#38bdf8);border-radius:18px;padding:28px 32px;margin-bottom:24px;color:#fff;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+  <div>
+    <div style="font-size:24px;font-weight:800;margin-bottom:6px">Hello, <span id="sName">{{ user_name }}</span>! 👋</div>
+    <div style="opacity:.85;font-size:14px" id="sClass">Loading your info…</div>
+  </div>
+  <div style="background:rgba(255,255,255,.15);border-radius:14px;padding:16px 24px;text-align:center">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;opacity:.8">Student ID</div>
+    <div style="font-size:20px;font-weight:800;letter-spacing:1px" id="sId">—</div>
+  </div>
+</div>
+
+<!-- Stats row -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><div class="label">Attendance</div><div class="value" id="attPct">—</div><div class="change">Present %</div></div></div>
+  <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-star"></i></div><div class="stat-info"><div class="label">GPA</div><div class="value" id="gpa">—</div><div class="change">Out of 4.0</div></div></div>
+  <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-book"></i></div><div class="stat-info"><div class="label">Subjects</div><div class="value" id="subjects">—</div><div class="change">Enrolled</div></div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-rupee-sign"></i></div><div class="stat-info"><div class="label">Fee Due</div><div class="value" id="feeDue">—</div><div class="change down">Pending</div></div></div>
+</div>
+
+<div class="grid-2">
+  <!-- Recent marks -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-bar"></i> Recent Marks</div>
+      <a href="/student/marks" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="table-wrap" id="recentMarksWrap">
+      <div class="empty-state"><div class="icon">📊</div><p>Loading…</p></div>
+    </div>
+  </div>
+
+  <!-- Quick links + attendance ring -->
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-bolt"></i> Quick Access</div></div>
+    <div class="card-body" style="display:flex;flex-direction:column;gap:12px">
+      <a href="/student/attendance" class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-calendar-check"></i> View My Attendance</a>
+      <a href="/student/marks"      class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-chart-bar"></i> View My Marks &amp; Grades</a>
+      <a href="/student/fees"       class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-rupee-sign"></i> View My Fee Details</a>
+      <a href="/student/profile"    class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-id-card"></i> Edit My Profile</a>
+    </div>
+    <div style="padding:0 24px 24px;text-align:center">
+      <div style="font-size:13px;font-weight:600;color:#64748b;margin-bottom:12px">Attendance Overview</div>
+      <canvas id="attRing" height="160"></canvas>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadDashboard() {
+  try {
+    const d = await api('/student/api/stats');
+
+    document.getElementById('sName').textContent  = d.student.name   || '{{ user_name }}';
+    document.getElementById('sId').textContent    = d.student.student_id || '—';
+    document.getElementById('sClass').textContent =
+      d.student.class
+        ? `Class ${d.student.class}-${d.student.section || 'A'} · ${d.student.gender || ''}`
+        : 'Click "Edit My Profile" to complete your details';
+
+    document.getElementById('attPct').textContent  = d.attendance_pct + '%';
+    document.getElementById('gpa').textContent     = d.gpa;
+    document.getElementById('subjects').textContent= d.total_subjects;
+    document.getElementById('feeDue').textContent  = fmtCurrency(d.pending_fees);
+
+    // Show incomplete banner if core fields are missing
+    if (!d.student.phone || !d.student.class) {
+      document.getElementById('profileAlert').style.display = 'flex';
+    }
+
+    // Recent marks table
+    const w = document.getElementById('recentMarksWrap');
+    if (d.recent_marks && d.recent_marks.length) {
+      w.innerHTML = `<table><thead><tr><th>Subject</th><th>Exam</th><th>Marks</th><th>Grade</th></tr></thead>
+      <tbody>${d.recent_marks.map(m => `<tr>
+        <td>${m.subject}</td>
+        <td><span class="badge badge-gray">${(m.exam_type||'').replace('_',' ')}</span></td>
+        <td>${m.marks_obtained}/${m.total_marks}</td>
+        <td><span class="grade ${gradeClass(m.grade)}">${m.grade}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+    } else {
+      w.innerHTML = `<div class="empty-state"><div class="icon">📊</div>
+        <h4>No marks yet</h4>
+        <p>Your marks will appear here once entered by your teacher.</p></div>`;
+    }
+
+    // Attendance doughnut
+    const pct   = d.attendance_pct;
+    const color = pct >= 75 ? '#0284c7' : '#ef4444';
+    new Chart(document.getElementById('attRing'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Present', 'Absent'],
+        datasets: [{ data: [pct, 100 - pct], backgroundColor: [color, '#e2e8f0'], borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, cutout: '72%',
+        plugins: { legend: { display: false } }
+      },
+      plugins: [{
+        id: 'centerText',
+        afterDraw(chart) {
+          const { ctx, chartArea: { width, height } } = chart;
+          ctx.save();
+          ctx.font = 'bold 22px Inter';
+          ctx.fillStyle = color;
+          ctx.textAlign = 'center';
+          ctx.fillText(pct + '%', width / 2, height / 2 + 8);
+          ctx.restore();
+        }
+      }]
+    });
+
+  } catch(e) {
+    if (e.message && e.message.includes('404')) {
+      document.getElementById('profileAlert').style.display = 'flex';
+    }
+  }
+}
+loadDashboard();
+</script>
+{% endblock %}

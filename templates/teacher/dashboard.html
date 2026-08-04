@@ -1,0 +1,74 @@
+{% extends "teacher/base.html" %}
+{% block title %}Teacher Dashboard{% endblock %}
+{% block page_title %}Teacher Dashboard{% endblock %}
+{% block page_subtitle %}Your classroom overview{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><div class="label">Total Students</div><div class="value" id="totalStudents">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><div class="label">Today Attendance</div><div class="value" id="attPct">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-book"></i></div><div class="stat-info"><div class="label">Subjects Taught</div><div class="value" id="subjectCount">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-chart-line"></i></div><div class="stat-info"><div class="label">Avg Class Score</div><div class="value" id="avgScore">—</div></div></div>
+</div>
+
+<div class="grid-2" style="margin-top:24px">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> Attendance Trend (6 Months)</div></div>
+    <div class="card-body"><canvas id="attChart" height="220"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-star"></i> Subject Performance</div></div>
+    <div class="card-body"><canvas id="subChart" height="220"></canvas></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:24px">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
+  </div>
+  <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap">
+    <a href="/teacher/attendance" class="btn btn-primary"><i class="fas fa-calendar-check"></i> Mark Attendance</a>
+    <a href="/teacher/marks"      class="btn btn-outline"><i class="fas fa-edit"></i> Enter Marks</a>
+    <a href="/teacher/students"   class="btn btn-outline"><i class="fas fa-users"></i> View Students</a>
+    <a href="/teacher/fees"       class="btn btn-outline"><i class="fas fa-rupee-sign"></i> Fee Status</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadDashboard() {
+  const d = await api('/teacher/api/stats');
+  document.getElementById('totalStudents').textContent = d.total_students;
+  document.getElementById('attPct').textContent        = d.attendance_pct + '%';
+  document.getElementById('subjectCount').textContent  = d.subjects.length;
+  const avg = d.subjects.length ? (d.subjects.reduce((a,s)=>a+s.avg,0)/d.subjects.length).toFixed(1) : '—';
+  document.getElementById('avgScore').textContent      = avg + (avg !== '—' ? '%' : '');
+
+  new Chart(document.getElementById('attChart'), {
+    type: 'line',
+    data: {
+      labels: d.months,
+      datasets: [
+        { label: 'Present', data: d.present_counts, borderColor: '#059669', backgroundColor: 'rgba(5,150,105,.1)', fill: true, tension: .3 },
+        { label: 'Absent',  data: d.absent_counts,  borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.1)', fill: true, tension: .3 },
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } } } }
+  });
+
+  if (d.subjects.length) {
+    new Chart(document.getElementById('subChart'), {
+      type: 'radar',
+      data: {
+        labels: d.subjects.map(s => s._id),
+        datasets: [{ label: 'Avg %', data: d.subjects.map(s=>s.avg.toFixed(1)),
+          backgroundColor: 'rgba(5,150,105,.2)', borderColor: '#059669', pointBackgroundColor: '#059669' }]
+      },
+      options: { responsive: true, scales: { r: { min: 0, max: 100 } } }
+    });
+  }
+}
+loadDashboard();
+</script>
+{% endblock %}

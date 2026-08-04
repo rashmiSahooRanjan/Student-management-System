@@ -1,0 +1,111 @@
+{% extends "admin/base.html" %}
+{% block title %}Fee Management{% endblock %}
+{% block page_title %}Fee Management{% endblock %}
+{% block page_subtitle %}Track and manage all student fees{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><div class="label">Total Collected</div><div class="value" id="collected">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div class="stat-info"><div class="label">Total Pending</div><div class="value" id="pending">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-list"></i></div><div class="stat-info"><div class="label">Total Records</div><div class="value" id="totalRecords">—</div></div></div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-plus-circle"></i> Add Fee Record</div></div>
+    <div class="card-body">
+      <div class="form-group"><label class="form-label">Student ID *</label><input class="form-control" id="f_sid" placeholder="e.g. STU-2024-1234"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount (₹) *</label><input class="form-control" id="f_amount" type="number" placeholder="5000"></div>
+        <div class="form-group"><label class="form-label">Fee Type *</label>
+          <select class="form-control" id="f_type">
+            <option value="tuition">Tuition Fee</option><option value="exam">Exam Fee</option><option value="library">Library Fee</option><option value="transport">Transport Fee</option><option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Due Date *</label><input class="form-control" id="f_due" type="date"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="addFee()"><i class="fas fa-plus"></i> Add Fee Record</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> Fee Breakdown</div></div>
+    <div class="card-body"><canvas id="feeBreakdown" height="200"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-list"></i> Fee Records</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="loadFees('')">All</button>
+      <button class="btn btn-sm" style="background:#dcfce7;color:#16a34a" onclick="loadFees('true')">Paid</button>
+      <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626" onclick="loadFees('false')">Pending</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student</th><th>Class</th><th>Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Receipt</th><th>Action</th></tr></thead>
+      <tbody id="feesBody"><tr><td colspan="8" style="text-align:center;padding:40px;color:#94a3b8">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadSummary() {
+  const d = await api('/admin/api/fees/summary');
+  document.getElementById('collected').textContent = fmtCurrency(d.collected);
+  document.getElementById('pending').textContent   = fmtCurrency(d.pending);
+  const bd = d.breakdown || {};
+  const labels = Object.keys(bd).map(k => k.charAt(0).toUpperCase()+k.slice(1));
+  if (labels.length) {
+    new Chart(document.getElementById('feeBreakdown'), {
+      type: 'pie',
+      data: { labels, datasets: [{ data: Object.values(bd), backgroundColor: ['#4f46e5','#059669','#f59e0b','#ef4444','#8b5cf6'], borderWidth: 0 }] },
+      options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+  }
+}
+
+async function loadFees(paid = '') {
+  const d = await api(`/admin/api/fees/list?paid=${paid}`);
+  document.getElementById('totalRecords').textContent = d.fees.length;
+  const tbody = document.getElementById('feesBody');
+  if (!d.fees.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="icon">💰</div><h4>No fee records</h4></div></td></tr>'; return; }
+  tbody.innerHTML = d.fees.map(f => `<tr>
+    <td><strong>${f.student_name}</strong></td>
+    <td>${f.student_class ? `Class ${f.student_class}` : '—'}</td>
+    <td><span class="badge badge-blue">${f.fee_type}</span></td>
+    <td><strong>${fmtCurrency(f.amount)}</strong></td>
+    <td>${fmtDate(f.due_date)}</td>
+    <td>${f.paid ? '<span class="badge badge-green"><i class="fas fa-check"></i> Paid</span>' : '<span class="badge badge-red"><i class="fas fa-clock"></i> Pending</span>'}</td>
+    <td>${f.receipt_no ? `<span class="badge badge-gray" style="font-size:11px">${f.receipt_no}</span>` : '—'}</td>
+    <td>${!f.paid ? `<button class="btn btn-success btn-sm" onclick="payFee('${f._id}')"><i class="fas fa-check"></i> Mark Paid</button>` : ''}</td>
+  </tr>`).join('');
+}
+
+async function addFee() {
+  const data = {
+    student_id: document.getElementById('f_sid').value.trim(),
+    amount:     document.getElementById('f_amount').value,
+    fee_type:   document.getElementById('f_type').value,
+    due_date:   document.getElementById('f_due').value,
+  };
+  if (!data.student_id || !data.amount || !data.due_date) { toast('Fill all fields.', 'error'); return; }
+  try {
+    const r = await api('/admin/api/fees/add', 'POST', data);
+    toast(r.message); loadFees(); loadSummary();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function payFee(id) {
+  try {
+    const r = await api(`/admin/api/fees/pay/${id}`, 'POST');
+    toast(`${r.message} Receipt: ${r.receipt_no}`); loadFees(); loadSummary();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+loadSummary(); loadFees();
+</script>
+{% endblock %}

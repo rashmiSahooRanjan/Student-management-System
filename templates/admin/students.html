@@ -1,0 +1,205 @@
+{% extends "admin/base.html" %}
+{% block title %}Students{% endblock %}
+{% block page_title %}Student Management{% endblock %}
+{% block page_subtitle %}Add, edit, and manage all students{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-user-graduate"></i> All Students</div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <div class="search-bar">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search name, ID, email…" oninput="debounce(loadStudents,400)()">
+      </div>
+      <select id="classFilter" class="form-control" style="width:auto" onchange="loadStudents()">
+        <option value="">All Classes</option>
+        <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+      </select>
+      <button class="btn btn-primary" onclick="openModal('addModal')"><i class="fas fa-plus"></i> Add Student</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Student ID</th><th>Name</th><th>Class</th><th>Gender</th><th>Phone</th><th>Guardian</th><th>Actions</th></tr></thead>
+      <tbody id="studentsBody"><tr><td colspan="7" style="text-align:center;padding:40px;color:#94a3b8">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <div style="padding:16px 24px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f1f5f9">
+    <span id="totalInfo" style="font-size:13px;color:#64748b"></span>
+    <div id="pagination" class="pagination"></div>
+  </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New Student</div>
+      <button class="modal-close" onclick="closeModal('addModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name *</label><input class="form-control" id="add_name" placeholder="Student's full name"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="add_email" type="email" placeholder="student@email.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="add_phone" placeholder="Mobile number"></div>
+        <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-control" id="add_dob" type="date"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Class</label>
+          <select class="form-control" id="add_class"><option value="">Select</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Section</label>
+          <select class="form-control" id="add_section"><option>A</option><option>B</option><option>C</option><option>D</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Gender</label>
+          <select class="form-control" id="add_gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="add_address" placeholder="Full address"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Guardian Name</label><input class="form-control" id="add_guardian_name" placeholder="Parent/Guardian name"></div>
+        <div class="form-group"><label class="form-label">Guardian Phone</label><input class="form-control" id="add_guardian_phone" placeholder="Guardian mobile"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="addStudent()"><i class="fas fa-user-plus"></i> Add Student</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Student Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Student</div>
+      <button class="modal-close" onclick="closeModal('editModal')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit_id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="edit_name"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-control" id="edit_email" type="email"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Phone</label><input class="form-control" id="edit_phone"></div>
+        <div class="form-group"><label class="form-label">Date of Birth</label><input class="form-control" id="edit_dob" type="date"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Class</label>
+          <select class="form-control" id="edit_class"><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Section</label>
+          <select class="form-control" id="edit_section"><option>A</option><option>B</option><option>C</option><option>D</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Gender</label>
+          <select class="form-control" id="edit_gender"><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="edit_address"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Guardian Name</label><input class="form-control" id="edit_guardian_name"></div>
+        <div class="form-group"><label class="form-label">Guardian Phone</label><input class="form-control" id="edit_guardian_phone"></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="saveEdit()"><i class="fas fa-save"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPage = 1;
+async function loadStudents(page = currentPage) {
+  currentPage = page;
+  const search = document.getElementById('searchInput').value;
+  const cls    = document.getElementById('classFilter').value;
+  const d = await api(`/admin/api/students?page=${page}&search=${encodeURIComponent(search)}&class=${cls}`);
+  const tbody = document.getElementById('studentsBody');
+  document.getElementById('totalInfo').textContent = `Showing ${d.students.length} of ${d.total} students`;
+  if (!d.students.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">👥</div><h4>No students found</h4><p>Try adjusting your search or add a new student.</p></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = d.students.map(s => `<tr>
+    <td><span class="badge badge-blue">${s.student_id}</span></td>
+    <td><strong>${s.name}</strong></td>
+    <td>${s.class ? `Class ${s.class}-${s.section||'A'}` : '—'}</td>
+    <td>${s.gender||'—'}</td>
+    <td>${s.phone||'—'}</td>
+    <td>${s.guardian_name||'—'}</td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-outline btn-sm btn-icon" onclick="editStudent('${s._id}')" title="Edit"><i class="fas fa-edit"></i></button>
+      <button class="btn btn-danger btn-sm btn-icon" onclick="delStudent('${s._id}','${s.name}')" title="Delete"><i class="fas fa-trash"></i></button>
+    </td>
+  </tr>`).join('');
+  renderPagination(document.getElementById('pagination'), page, d.total, 10, 'loadStudents');
+}
+
+async function addStudent() {
+  const data = {
+    name: document.getElementById('add_name').value.trim(),
+    email: document.getElementById('add_email').value.trim(),
+    phone: document.getElementById('add_phone').value,
+    dob: document.getElementById('add_dob').value,
+    class: document.getElementById('add_class').value,
+    section: document.getElementById('add_section').value,
+    gender: document.getElementById('add_gender').value,
+    address: document.getElementById('add_address').value,
+    guardian_name: document.getElementById('add_guardian_name').value,
+    guardian_phone: document.getElementById('add_guardian_phone').value,
+  };
+  if (!data.name || !data.email) { toast('Name and email are required.', 'error'); return; }
+  try {
+    const r = await api('/admin/api/students', 'POST', data);
+    toast(r.message); closeModal('addModal'); loadStudents(1);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function editStudent(id) {
+  const d = await api(`/admin/api/students/${id}`);
+  const s = d.student;
+  document.getElementById('edit_id').value           = id;
+  document.getElementById('edit_name').value         = s.name||'';
+  document.getElementById('edit_email').value        = s.email||'';
+  document.getElementById('edit_phone').value        = s.phone||'';
+  document.getElementById('edit_dob').value          = s.dob||'';
+  document.getElementById('edit_class').value        = s.class||'';
+  document.getElementById('edit_section').value      = s.section||'A';
+  document.getElementById('edit_gender').value       = s.gender||'';
+  document.getElementById('edit_address').value      = s.address||'';
+  document.getElementById('edit_guardian_name').value  = s.guardian_name||'';
+  document.getElementById('edit_guardian_phone').value = s.guardian_phone||'';
+  openModal('editModal');
+}
+
+async function saveEdit() {
+  const id = document.getElementById('edit_id').value;
+  const data = {
+    name: document.getElementById('edit_name').value, email: document.getElementById('edit_email').value,
+    phone: document.getElementById('edit_phone').value, dob: document.getElementById('edit_dob').value,
+    class: document.getElementById('edit_class').value, section: document.getElementById('edit_section').value,
+    gender: document.getElementById('edit_gender').value, address: document.getElementById('edit_address').value,
+    guardian_name: document.getElementById('edit_guardian_name').value, guardian_phone: document.getElementById('edit_guardian_phone').value,
+  };
+  try {
+    const r = await api(`/admin/api/students/${id}`, 'PUT', data);
+    toast(r.message); closeModal('editModal'); loadStudents();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function delStudent(id, name) {
+  if (!confirm(`Delete student "${name}"? This cannot be undone.`)) return;
+  try {
+    const r = await api(`/admin/api/students/${id}`, 'DELETE');
+    toast(r.message, 'warning'); loadStudents();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+loadStudents();
+</script>
+{% endblock %}

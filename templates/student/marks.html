@@ -1,0 +1,144 @@
+{% extends "student/base.html" %}
+{% block title %}My Marks{% endblock %}
+{% block page_title %}My Marks &amp; Grades{% endblock %}
+{% block page_subtitle %}Your academic performance report{% endblock %}
+
+{% block content %}
+<!-- Summary -->
+<div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+  <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-star"></i></div><div class="stat-info"><div class="label">GPA</div><div class="value" id="gpa">—</div><div class="change">Out of 4.0</div></div></div>
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><div class="label">Avg Percentage</div><div class="value" id="avgPct">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-book"></i></div><div class="stat-info"><div class="label">Total Exams</div><div class="value" id="totalExams">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-award"></i></div><div class="stat-info"><div class="label">Best Grade</div><div class="value" id="bestGrade">—</div></div></div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-radar"></i> Subject Performance</div></div>
+    <div class="card-body"><canvas id="subjectChart" height="240"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> Marks by Exam Type</div></div>
+    <div class="card-body"><canvas id="examChart" height="240"></canvas></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-table"></i> Detailed Marks</div>
+    <select class="form-control" id="subjectFilter" style="width:auto" onchange="filterMarks()">
+      <option value="">All Subjects</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Subject</th><th>Exam Type</th><th>Marks</th><th>Percentage</th><th>Grade</th><th>Date</th></tr></thead>
+      <tbody id="marksBody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allMarks = [];
+
+async function loadMarks() {
+  const d   = await api('/student/api/marks');
+  allMarks  = d.marks;
+  const gpa = d.gpa;
+
+  document.getElementById('gpa').textContent        = gpa;
+  document.getElementById('totalExams').textContent = allMarks.length;
+
+  if (allMarks.length) {
+    const pcts   = allMarks.map(m => m.percentage);
+    const avg    = (pcts.reduce((a,b)=>a+b,0)/pcts.length).toFixed(1);
+    const grades = allMarks.map(m => m.grade);
+    const order  = ['A+','A','B+','B','C','D','F'];
+    const best   = grades.sort((a,b)=>order.indexOf(a)-order.indexOf(b))[0];
+    document.getElementById('avgPct').textContent  = avg + '%';
+    document.getElementById('bestGrade').textContent = best;
+  }
+
+  // Populate subject filter
+  const subjects = [...new Set(allMarks.map(m=>m.subject))];
+  const sel = document.getElementById('subjectFilter');
+  subjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    sel.appendChild(o);
+  });
+
+  // Subject radar chart
+  const subAvg = {};
+  allMarks.forEach(m => {
+    if (!subAvg[m.subject]) subAvg[m.subject] = [];
+    subAvg[m.subject].push(m.percentage);
+  });
+  const subLabels = Object.keys(subAvg);
+  const subData   = subLabels.map(s => (subAvg[s].reduce((a,b)=>a+b,0)/subAvg[s].length).toFixed(1));
+
+  new Chart(document.getElementById('subjectChart'), {
+    type: 'radar',
+    data: {
+      labels: subLabels,
+      datasets: [{ label: 'Avg %', data: subData,
+        backgroundColor: 'rgba(2,132,199,.2)', borderColor: '#0284c7',
+        pointBackgroundColor: '#0284c7', pointRadius: 5 }]
+    },
+    options: { responsive:true, scales:{ r:{ min:0, max:100, ticks:{stepSize:20} } }, plugins:{legend:{display:false}} }
+  });
+
+  // Exam type bar
+  const examAvg = {};
+  allMarks.forEach(m => {
+    const k = m.exam_type.replace('_',' ');
+    if (!examAvg[k]) examAvg[k] = [];
+    examAvg[k].push(m.percentage);
+  });
+  const examLabels = Object.keys(examAvg);
+  const examData   = examLabels.map(k => (examAvg[k].reduce((a,b)=>a+b,0)/examAvg[k].length).toFixed(1));
+
+  new Chart(document.getElementById('examChart'), {
+    type: 'bar',
+    data: {
+      labels: examLabels,
+      datasets: [{ label: 'Avg %', data: examData,
+        backgroundColor: ['#0284c7','#7c3aed','#059669','#f59e0b'], borderRadius:8 }]
+    },
+    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{max:100,min:0},x:{grid:{display:false}}} }
+  });
+
+  renderTable(allMarks);
+}
+
+function filterMarks() {
+  const sub = document.getElementById('subjectFilter').value;
+  renderTable(sub ? allMarks.filter(m=>m.subject===sub) : allMarks);
+}
+
+function renderTable(marks) {
+  const tbody = document.getElementById('marksBody');
+  if (!marks.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">📊</div><h4>No marks found</h4></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = marks.map(m => `<tr>
+    <td><strong>${m.subject}</strong></td>
+    <td><span class="badge badge-gray">${(m.exam_type||'').replace('_',' ')}</span></td>
+    <td>${m.marks_obtained}/${m.total_marks}</td>
+    <td>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="progress" style="flex:1;height:6px"><div class="progress-bar" style="width:${m.percentage}%;background:${m.percentage>=75?'#0284c7':m.percentage>=50?'#f59e0b':'#ef4444'}"></div></div>
+        <span style="font-size:13px;font-weight:600">${m.percentage}%</span>
+      </div>
+    </td>
+    <td><span class="grade ${gradeClass(m.grade)}" style="font-size:16px">${m.grade}</span></td>
+    <td style="color:#64748b;font-size:13px">${m.created_at||'—'}</td>
+  </tr>`).join('');
+}
+
+loadMarks();
+</script>
+{% endblock %}

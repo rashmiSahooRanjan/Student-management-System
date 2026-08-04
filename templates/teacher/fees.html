@@ -1,0 +1,61 @@
+{% extends "teacher/base.html" %}
+{% block title %}Fee Status{% endblock %}
+{% block page_title %}Fee Status{% endblock %}
+{% block page_subtitle %}View student fee status (read-only){% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:24px">
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><div class="label">Total Collected</div><div class="value" id="collected">—</div></div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div class="stat-info"><div class="label">Total Pending</div><div class="value" id="pending">—</div></div></div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-search"></i> Student Fee Lookup</div>
+  </div>
+  <div class="card-body">
+    <div style="display:flex;gap:12px;align-items:flex-end">
+      <div class="form-group" style="flex:1;margin:0"><label class="form-label">Student ID</label><input class="form-control" id="f_sid" placeholder="Enter Student ID"></div>
+      <button class="btn btn-outline" onclick="lookupFees()"><i class="fas fa-search"></i> Look Up</button>
+    </div>
+    <div id="feesResult" style="margin-top:20px"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadSummary() {
+  const d = await api('/teacher/api/fees/summary');
+  document.getElementById('collected').textContent = fmtCurrency(d.collected);
+  document.getElementById('pending').textContent   = fmtCurrency(d.pending);
+}
+
+async function lookupFees() {
+  const sid = document.getElementById('f_sid').value.trim();
+  if (!sid) { toast('Enter a Student ID.', 'error'); return; }
+  try {
+    const d   = await api(`/teacher/api/fees/student/${sid}`);
+    const res = document.getElementById('feesResult');
+    if (!d.fees.length) { res.innerHTML = '<div class="empty-state"><div class="icon">💰</div><h4>No fee records found</h4></div>'; return; }
+    const pending   = d.fees.filter(f=>!f.paid).reduce((a,f)=>a+f.amount,0);
+    const collected = d.fees.filter(f=>f.paid).reduce((a,f)=>a+f.amount,0);
+    res.innerHTML = `
+      <div style="display:flex;gap:16px;margin-bottom:16px">
+        <div class="card" style="padding:12px 20px;flex:1;border-left:4px solid #16a34a"><div style="font-size:12px;color:#64748b">Paid</div><div style="font-size:20px;font-weight:700;color:#16a34a">${fmtCurrency(collected)}</div></div>
+        <div class="card" style="padding:12px 20px;flex:1;border-left:4px solid #dc2626"><div style="font-size:12px;color:#64748b">Pending</div><div style="font-size:20px;font-weight:700;color:#dc2626">${fmtCurrency(pending)}</div></div>
+      </div>
+      <table><thead><tr><th>Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Receipt</th></tr></thead>
+      <tbody>${d.fees.map(f=>`<tr>
+        <td><span class="badge badge-blue">${f.fee_type}</span></td>
+        <td>${fmtCurrency(f.amount)}</td>
+        <td>${fmtDate(f.due_date)}</td>
+        <td>${f.paid?'<span class="badge badge-green">Paid</span>':'<span class="badge badge-red">Pending</span>'}</td>
+        <td>${f.receipt_no||'—'}</td>
+      </tr>`).join('')}</tbody></table>`;
+  } catch(e) { toast('No data found.', 'error'); }
+}
+
+loadSummary();
+</script>
+{% endblock %}

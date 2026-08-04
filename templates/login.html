@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EduNova — Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;align-items:center;justify-content:center;padding:20px}
+  .login-wrap{display:flex;width:100%;max-width:900px;min-height:580px;border-radius:24px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+  .login-left{flex:1;background:linear-gradient(145deg,#667eea,#764ba2);padding:50px 40px;display:flex;flex-direction:column;justify-content:space-between;color:#fff}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:40px}
+  .brand-icon{width:48px;height:48px;background:rgba(255,255,255,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+  .brand-name{font-size:26px;font-weight:800;letter-spacing:-0.5px}
+  .brand-tagline{font-size:13px;opacity:.8;margin-top:2px}
+  .hero-text h2{font-size:32px;font-weight:800;line-height:1.3;margin-bottom:12px}
+  .hero-text p{opacity:.8;font-size:15px;line-height:1.6}
+  .role-cards{display:flex;flex-direction:column;gap:10px;margin-top:30px}
+  .role-card{background:rgba(255,255,255,.12);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;backdrop-filter:blur(10px)}
+  .role-card i{font-size:20px;opacity:.9}
+  .role-card-info strong{display:block;font-size:14px;font-weight:600}
+  .role-card-info span{font-size:12px;opacity:.7}
+  .login-right{flex:1;background:#fff;padding:50px 44px;display:flex;flex-direction:column;justify-content:center}
+  .login-right h3{font-size:24px;font-weight:800;color:#1a1a2e;margin-bottom:6px}
+  .login-right .sub{color:#6b7280;font-size:14px;margin-bottom:30px}
+  .role-tabs{display:flex;gap:6px;margin-bottom:28px;background:#f3f4f6;padding:4px;border-radius:12px}
+  .role-tab{flex:1;padding:10px;border:none;background:transparent;border-radius:8px;font-size:13px;font-weight:600;color:#6b7280;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px}
+  .role-tab.active{background:#fff;color:#4f46e5;box-shadow:0 2px 8px rgba(79,70,229,.15)}
+  .form-group{margin-bottom:18px}
+  .form-group label{display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px}
+  .form-group input{width:100%;padding:12px 16px;border:2px solid #e5e7eb;border-radius:10px;font-size:14px;font-family:inherit;transition:.2s;outline:none}
+  .form-group input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+  .btn-login{width:100%;padding:13px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;margin-top:6px}
+  .btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 25px rgba(79,70,229,.35)}
+  .alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:16px;display:none}
+  .alert-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;display:block}
+  .alert-success{background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;display:block}
+  .divider{display:flex;align-items:center;gap:10px;margin:18px 0;color:#9ca3af;font-size:13px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
+  .link-register{text-align:center;font-size:14px;color:#6b7280}
+  .link-register a{color:#4f46e5;font-weight:600;text-decoration:none}
+  .demo-creds{background:#f8f9ff;border:1px solid #e0e7ff;border-radius:10px;padding:12px 16px;margin-top:16px;font-size:12px;color:#4338ca}
+  .demo-creds strong{display:block;margin-bottom:6px;font-size:13px}
+  .demo-row{display:flex;justify-content:space-between;padding:3px 0;color:#6366f1}
+  @media(max-width:640px){.login-left{display:none}.login-wrap{max-width:420px}}
+</style>
+</head>
+<body>
+
+<div class="login-wrap">
+  <!-- Left panel -->
+  <div class="login-left">
+    <div>
+      <div class="brand">
+        <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+        <div>
+          <div class="brand-name">EduNova</div>
+          <div class="brand-tagline">School Management System</div>
+        </div>
+      </div>
+      <div class="hero-text">
+        <h2>Three Panels,<br>One Platform</h2>
+        <p>Separate dashboards for every role — Admin, Teacher, and Student. Each with its own features and permissions.</p>
+      </div>
+    </div>
+    <div class="role-cards">
+      <div class="role-card"><i class="fas fa-shield-alt"></i><div class="role-card-info"><strong>Admin Panel</strong><span>Full access — students, teachers, fees, reports</span></div></div>
+      <div class="role-card"><i class="fas fa-chalkboard-teacher"></i><div class="role-card-info"><strong>Teacher Panel</strong><span>Mark attendance, add marks, view students</span></div></div>
+      <div class="role-card"><i class="fas fa-user-graduate"></i><div class="role-card-info"><strong>Student Panel</strong><span>View grades, attendance, fees, profile</span></div></div>
+    </div>
+  </div>
+
+  <!-- Right panel -->
+  <div class="login-right">
+    <h3>Welcome Back!</h3>
+    <p class="sub">Sign in to access your panel</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+    <div class="alert" id="alertBox"></div>
+
+    <!-- Role tabs -->
+    <div class="role-tabs">
+      <button class="role-tab active" data-role="admin" onclick="setRole('admin',this)"><i class="fas fa-shield-alt"></i> Admin</button>
+      <button class="role-tab" data-role="teacher" onclick="setRole('teacher',this)"><i class="fas fa-chalkboard-teacher"></i> Teacher</button>
+      <button class="role-tab" data-role="student" onclick="setRole('student',this)"><i class="fas fa-user-graduate"></i> Student</button>
+    </div>
+
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="Enter your email" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+
+    <button class="btn-login" onclick="doLogin()" id="loginBtn">
+      <i class="fas fa-sign-in-alt"></i> Sign In
+    </button>
+
+    <div class="demo-creds">
+      <strong>🔑 Demo Credentials</strong>
+      <div class="demo-row"><span>Admin:</span><span>admin@school.com / admin123</span></div>
+      <div class="demo-row"><span>Teacher:</span><span>teacher@school.com / teacher123</span></div>
+      <div class="demo-row"><span>Student:</span><span>student@school.com / student123</span></div>
+    </div>
+
+    <div class="divider">or</div>
+    <div class="link-register">Don't have an account? <a href="/auth/register">Register</a></div>
+  </div>
+</div>
+
+<script>
+let selectedRole = 'admin';
+function setRole(role, btn) {
+  selectedRole = role;
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  // Auto-fill demo creds hint
+  const creds = {admin:'admin@school.com',teacher:'teacher@school.com',student:'student@school.com'};
+  // document.getElementById('email').placeholder = creds[role];
+}
+
+async function doLogin() {
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const box      = document.getElementById('alertBox');
+  box.className  = 'alert';
+  box.textContent = '';
+
+  if (!email || !password) {
+    box.className   = 'alert alert-danger';
+    box.textContent = 'Please enter email and password.';
+    return;
+  }
+
+  const btn = document.getElementById('loginBtn');
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+  btn.disabled  = true;
+
+  try {
+    const res  = await fetch('/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password, role: selectedRole})
+    });
+    const data = await res.json();
+    if (data.success) {
+      window.location.href = data.redirect;
+    } else {
+      box.className   = 'alert alert-danger';
+      box.textContent = data.message || 'Login failed.';
+      btn.innerHTML   = '<i class="fas fa-sign-in-alt"></i> Sign In';
+      btn.disabled    = false;
+    }
+  } catch(e) {
+    box.className   = 'alert alert-danger';
+    box.textContent = 'Network error. Please try again.';
+    btn.innerHTML   = '<i class="fas fa-sign-in-alt"></i> Sign In';
+    btn.disabled    = false;
+  }
+}
+</script>
+</body>
+</html>

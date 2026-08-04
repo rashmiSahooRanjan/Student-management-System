@@ -1,0 +1,239 @@
+{% extends "student/base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}View and update your personal information{% endblock %}
+
+{% block content %}
+
+<!-- Incomplete profile banner (shown only when fields are missing) -->
+<div id="incompleteBanner" style="display:none;background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:14px;padding:18px 24px;margin-bottom:24px;color:#fff;display:flex;align-items:center;gap:14px">
+  <i class="fas fa-exclamation-circle" style="font-size:24px;flex-shrink:0"></i>
+  <div>
+    <div style="font-weight:700;font-size:15px">Complete your profile</div>
+    <div style="font-size:13px;opacity:.9;margin-top:2px">Your profile is incomplete. Fill in the details below so your teacher and admin can see your full information.</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Edit form -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-id-card"></i> Personal Information</div>
+      <span class="badge badge-blue" id="studentIdBadge" style="font-size:13px"></span>
+    </div>
+    <div class="card-body">
+      <div style="text-align:center;margin-bottom:24px">
+        <div id="avatarCircle" style="width:72px;height:72px;background:linear-gradient(135deg,#0284c7,#38bdf8);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin:0 auto 10px">?</div>
+        <div id="dispName" style="font-size:17px;font-weight:700;color:#1e293b">Loading…</div>
+        <span class="badge badge-blue" style="margin-top:4px">Student</span>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input class="form-control" id="f_name" placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email (read-only)</label>
+          <input class="form-control" id="f_email" readonly style="background:#f8fafc;cursor:not-allowed">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input class="form-control" id="f_phone" placeholder="Mobile number">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input class="form-control" id="f_dob" type="date">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select class="form-control" id="f_gender">
+            <option value="">Select</option>
+            <option>Male</option><option>Female</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <input class="form-control" id="f_address" placeholder="Your address">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Class</label>
+          <select class="form-control" id="f_class">
+            <option value="">Select Class</option>
+            <option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <select class="form-control" id="f_section">
+            <option>A</option><option>B</option><option>C</option><option>D</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Guardian Name</label>
+          <input class="form-control" id="f_guardian_name" placeholder="Parent / Guardian name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Guardian Phone</label>
+          <input class="form-control" id="f_guardian_phone" placeholder="Guardian mobile">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="saveProfile()">
+        <i class="fas fa-save"></i> Save Profile
+      </button>
+    </div>
+  </div>
+
+  <!-- Right side: read-only academic info + password change -->
+  <div style="display:flex;flex-direction:column;gap:24px">
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-school"></i> Academic Details</div></div>
+      <div class="card-body" id="academicBody">
+        <div class="empty-state"><div class="icon">🏫</div><p>Loading…</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-lock"></i> Change Password</div></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input class="form-control" id="p_pw" type="password" placeholder="Min 6 characters">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirm Password</label>
+          <input class="form-control" id="p_pw2" type="password" placeholder="Re-enter password">
+        </div>
+        <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="changePassword()">
+          <i class="fas fa-key"></i> Change Password
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-title"><i class="fas fa-info-circle"></i> My Panel Access</div></div>
+      <div class="card-body">
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
+          <div style="display:flex;justify-content:space-between"><span style="color:#64748b">View My Attendance</span><span class="badge badge-green">Yes</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#64748b">View My Marks</span><span class="badge badge-green">Yes</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#64748b">View My Fees</span><span class="badge badge-green">Yes</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#64748b">Edit Other Students</span><span class="badge badge-red">No</span></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:#64748b">Mark Attendance</span><span class="badge badge-red">No</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function infoRow(label, value) {
+  return `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f1f5f9">
+    <span style="font-size:13px;color:#64748b;font-weight:500">${label}</span>
+    <span style="font-size:13px;font-weight:600;color:#1e293b">${value || '<span style="color:#94a3b8">Not set</span>'}</span>
+  </div>`;
+}
+
+async function loadProfile() {
+  try {
+    const d = await api('/student/api/profile');
+    const s = d.student;
+
+    // Avatar & name
+    const initials = (s.name || '?')[0].toUpperCase();
+    document.getElementById('avatarCircle').textContent = initials;
+    document.getElementById('dispName').textContent     = s.name || '—';
+    document.getElementById('studentIdBadge').textContent = s.student_id;
+
+    // Fill editable form
+    document.getElementById('f_name').value          = s.name           || '';
+    document.getElementById('f_email').value         = s.email          || '';
+    document.getElementById('f_phone').value         = s.phone          || '';
+    document.getElementById('f_dob').value           = s.dob            || '';
+    document.getElementById('f_gender').value        = s.gender         || '';
+    document.getElementById('f_address').value       = s.address        || '';
+    document.getElementById('f_class').value         = s.class          || '';
+    document.getElementById('f_section').value       = s.section        || 'A';
+    document.getElementById('f_guardian_name').value = s.guardian_name  || '';
+    document.getElementById('f_guardian_phone').value= s.guardian_phone || '';
+
+    // Academic read-only block
+    document.getElementById('academicBody').innerHTML =
+      infoRow('Student ID', `<span class="badge badge-blue">${s.student_id}</span>`) +
+      infoRow('Class', s.class ? `Class ${s.class} – Section ${s.section || 'A'}` : null) +
+      infoRow('Joined', s.created_at || null);
+
+    // Show incomplete banner if key fields missing
+    const incomplete = !s.phone || !s.class || !s.guardian_name;
+    if (incomplete) {
+      document.getElementById('incompleteBanner').style.display = 'flex';
+    }
+
+  } catch(e) {
+    toast('Could not load profile.', 'error');
+  }
+}
+
+async function saveProfile() {
+  const payload = {
+    name:           document.getElementById('f_name').value.trim(),
+    phone:          document.getElementById('f_phone').value.trim(),
+    dob:            document.getElementById('f_dob').value,
+    gender:         document.getElementById('f_gender').value,
+    address:        document.getElementById('f_address').value.trim(),
+    class:          document.getElementById('f_class').value,
+    section:        document.getElementById('f_section').value,
+    guardian_name:  document.getElementById('f_guardian_name').value.trim(),
+    guardian_phone: document.getElementById('f_guardian_phone').value.trim(),
+  };
+  if (!payload.name) { toast('Name is required.', 'error'); return; }
+  try {
+    const r = await api('/student/api/profile/update', 'POST', payload);
+    toast(r.message);
+    document.getElementById('incompleteBanner').style.display = 'none';
+    document.getElementById('dispName').textContent     = payload.name;
+    document.getElementById('avatarCircle').textContent = payload.name[0].toUpperCase();
+    document.getElementById('academicBody').innerHTML =
+      infoRow('Student ID', `<span class="badge badge-blue">${document.getElementById('studentIdBadge').textContent}</span>`) +
+      infoRow('Class', payload.class ? `Class ${payload.class} – Section ${payload.section}` : null) +
+      infoRow('Guardian', payload.guardian_name || null);
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function changePassword() {
+  const pw  = document.getElementById('p_pw').value;
+  const pw2 = document.getElementById('p_pw2').value;
+  if (!pw)       { toast('Enter a new password.', 'error'); return; }
+  if (pw.length < 6) { toast('Password must be at least 6 characters.', 'error'); return; }
+  if (pw !== pw2){ toast('Passwords do not match.', 'error'); return; }
+  try {
+    // Students change password via user update — call a shared endpoint
+    const r = await fetch('/student/api/change-password', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({password: pw})
+    });
+    const data = await r.json();
+    if (data.success) {
+      toast('Password changed successfully!');
+      document.getElementById('p_pw').value  = '';
+      document.getElementById('p_pw2').value = '';
+    } else {
+      toast(data.message || 'Failed.', 'error');
+    }
+  } catch(e) { toast('Error changing password.', 'error'); }
+}
+
+loadProfile();
+</script>
+{% endblock %}

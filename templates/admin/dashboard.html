@@ -1,0 +1,107 @@
+{% extends "admin/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+{% block page_subtitle %}Complete overview of your school{% endblock %}
+
+{% block content %}
+<div class="stats-grid" id="statsGrid">
+  <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-user-graduate"></i></div><div class="stat-info"><div class="label">Total Students</div><div class="value" id="totalStudents">—</div><div class="change">Enrolled</div></div></div>
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-chalkboard-teacher"></i></div><div class="stat-info"><div class="label">Total Teachers</div><div class="value" id="totalTeachers">—</div><div class="change">Active staff</div></div></div>
+  <div class="stat-card"><div class="stat-icon purple"><i class="fas fa-calendar-check"></i></div><div class="stat-info"><div class="label">Today's Attendance</div><div class="value" id="attPct">—</div><div class="change">Present today</div></div></div>
+  <div class="stat-card"><div class="stat-icon teal"><i class="fas fa-rupee-sign"></i></div><div class="stat-info"><div class="label">Fees Collected</div><div class="value" id="feesCollected">—</div><div class="change up"><i class="fas fa-arrow-up"></i> Paid</div></div></div>
+  <div class="stat-card"><div class="stat-icon orange"><i class="fas fa-exclamation-circle"></i></div><div class="stat-info"><div class="label">Fees Pending</div><div class="value" id="feesPending">—</div><div class="change down">Outstanding</div></div></div>
+  <div class="stat-card"><div class="stat-icon red"><i class="fas fa-users"></i></div><div class="stat-info"><div class="label">Total Users</div><div class="value" id="totalUsers">—</div><div class="change">All accounts</div></div></div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-line"></i> Attendance Trend (6 Months)</div>
+    </div>
+    <div class="card-body"><canvas id="attChart" height="200"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-chart-pie"></i> Fee Collection Breakdown</div>
+    </div>
+    <div class="card-body"><canvas id="feeChart" height="200"></canvas></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-trophy"></i> Top Performers</div>
+      <a href="/admin/marks" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="card-body" id="ranklistBody" style="padding:0"><div class="empty-state"><div class="icon">🏆</div><p>Loading...</p></div></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><i class="fas fa-clock"></i> Quick Actions</div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <a href="/admin/students"   class="btn btn-primary" style="justify-content:flex-start"><i class="fas fa-user-plus"></i> Add New Student</a>
+        <a href="/admin/teachers"   class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-user-tie"></i> Manage Teachers</a>
+        <a href="/admin/attendance" class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-calendar-check"></i> Mark Attendance</a>
+        <a href="/admin/marks"      class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-edit"></i> Enter Marks</a>
+        <a href="/admin/fees"       class="btn btn-outline" style="justify-content:flex-start"><i class="fas fa-money-bill"></i> Manage Fees</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadDashboard() {
+  const d = await api('/admin/api/stats');
+  document.getElementById('totalStudents').textContent = d.total_students;
+  document.getElementById('totalTeachers').textContent = d.total_teachers;
+  document.getElementById('totalUsers').textContent    = d.total_users;
+  document.getElementById('attPct').textContent        = d.attendance_pct + '%';
+  document.getElementById('feesCollected').textContent = fmtCurrency(d.fees_collected);
+  document.getElementById('feesPending').textContent   = fmtCurrency(d.fees_pending);
+
+  // Attendance chart
+  new Chart(document.getElementById('attChart'), {
+    type: 'bar',
+    data: {
+      labels: d.months,
+      datasets: [
+        { label: 'Present', data: d.present_counts, backgroundColor: 'rgba(79,70,229,.8)', borderRadius: 6 },
+        { label: 'Absent',  data: d.absent_counts,  backgroundColor: 'rgba(239,68,68,.6)',  borderRadius: 6 },
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { x: { grid: { display: false } } } }
+  });
+
+  // Fee chart
+  const bd = d.fee_breakdown || {};
+  const labels = Object.keys(bd).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+  const vals   = Object.values(bd);
+  new Chart(document.getElementById('feeChart'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data: vals, backgroundColor: ['#4f46e5','#059669','#f59e0b','#ef4444','#8b5cf6'], borderWidth: 0 }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } }, cutout: '65%' }
+  });
+
+  // Ranklist
+  const rl = await api('/admin/api/marks/ranklist');
+  const body = document.getElementById('ranklistBody');
+  if (!rl.ranklist.length) { body.innerHTML = '<div class="empty-state"><div class="icon">🏆</div><p>No marks data yet.</p></div>'; return; }
+  body.innerHTML = `<table><thead><tr><th>#</th><th>Student</th><th>Class</th><th>Avg %</th></tr></thead><tbody>
+    ${rl.ranklist.slice(0,8).map(r=>`<tr>
+      <td><span class="badge ${r.rank<=3?'badge-purple':'badge-gray'}">${r.rank}</span></td>
+      <td>${r.name}</td><td>${r.class||'—'}</td>
+      <td><strong>${r.avg}%</strong></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+loadDashboard();
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "admin/base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+{% block page_subtitle %}Manage your administrator account{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-user-cog"></i> Profile Information</div></div>
+    <div class="card-body">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:80px;height:80px;background:linear-gradient(135deg,#4f46e5,#7c3aed);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:800;color:#fff;margin:0 auto 12px">
+          {{ (user_name or 'A')[0].upper() }}
+        </div>
+        <div style="font-size:18px;font-weight:700;color:#1e293b">{{ user_name }}</div>
+        <span class="badge badge-purple" style="margin-top:6px"><i class="fas fa-shield-alt"></i> Administrator</span>
+      </div>
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-control" id="p_name" value="{{ user_name }}"></div>
+      <div class="form-group"><label class="form-label">Email (read-only)</label><input class="form-control" value="{{ user_email }}" readonly style="background:#f8fafc;cursor:not-allowed"></div>
+      <div class="form-group"><label class="form-label">Role</label><input class="form-control" value="Administrator" readonly style="background:#f8fafc;cursor:not-allowed"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center" onclick="updateProfile()"><i class="fas fa-save"></i> Save Changes</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-lock"></i> Change Password</div></div>
+    <div class="card-body">
+      <div class="form-group"><label class="form-label">New Password</label><input class="form-control" id="p_pw" type="password" placeholder="New password"></div>
+      <div class="form-group"><label class="form-label">Confirm Password</label><input class="form-control" id="p_pw2" type="password" placeholder="Confirm new password"></div>
+      <button class="btn btn-outline" style="width:100%;justify-content:center" onclick="changePassword()"><i class="fas fa-key"></i> Change Password</button>
+      <div style="margin-top:28px;padding-top:24px;border-top:1px solid #f1f5f9">
+        <h4 style="font-size:14px;font-weight:700;color:#1e293b;margin-bottom:12px">Admin Panel Access</h4>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#64748b">Students Management</span><span class="badge badge-green">Full Access</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#64748b">Teachers Management</span><span class="badge badge-green">Full Access</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#64748b">Attendance</span><span class="badge badge-green">Full Access</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#64748b">Marks & Grades</span><span class="badge badge-green">Full Access</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#64748b">Fee Management</span><span class="badge badge-green">Full Access</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function updateProfile() {
+  const name = document.getElementById('p_name').value.trim();
+  if (!name) { toast('Name cannot be empty.', 'error'); return; }
+  try {
+    const r = await api('/admin/api/profile/update', 'POST', {name});
+    toast(r.message);
+  } catch(e) { toast(e.message, 'error'); }
+}
+async function changePassword() {
+  const pw  = document.getElementById('p_pw').value;
+  const pw2 = document.getElementById('p_pw2').value;
+  if (!pw || !pw2) { toast('Enter both password fields.', 'error'); return; }
+  if (pw !== pw2)  { toast('Passwords do not match.', 'error'); return; }
+  try {
+    const r = await api('/admin/api/profile/update', 'POST', {password: pw});
+    toast(r.message);
+    document.getElementById('p_pw').value = '';
+    document.getElementById('p_pw2').value = '';
+  } catch(e) { toast(e.message, 'error'); }
+}
+</script>
+{% endblock %}

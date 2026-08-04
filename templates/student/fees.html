@@ -1,0 +1,111 @@
+{% extends "student/base.html" %}
+{% block title %}My Fees{% endblock %}
+{% block page_title %}My Fee Details{% endblock %}
+{% block page_subtitle %}Your complete fee payment history{% endblock %}
+
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+  <div class="stat-card"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div class="stat-info"><div class="label">Total Paid</div><div class="value" id="collected">—</div><div class="change up">Cleared</div></div></div>
+  <div class="stat-card"><div class="stat-icon red"><i class="fas fa-clock"></i></div><div class="stat-info"><div class="label">Pending Amount</div><div class="value" id="pending">—</div><div class="change down">Due</div></div></div>
+  <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-list"></i></div><div class="stat-info"><div class="label">Total Records</div><div class="value" id="totalRecords">—</div></div></div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> Payment Status</div></div>
+    <div class="card-body" style="display:flex;justify-content:center"><canvas id="feeStatus" height="180" width="180"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-info-circle"></i> Payment Info</div></div>
+    <div class="card-body">
+      <div style="background:#eff6ff;border-radius:12px;padding:16px;border-left:4px solid #0284c7;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:#0284c7;margin-bottom:4px">💡 Payment Instructions</div>
+        <div style="font-size:13px;color:#1e40af">Please visit the school office to clear any pending fee payments. Bring your Student ID for reference.</div>
+      </div>
+      <div id="pendingList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-receipt"></i> Fee Records</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="filterFees('')">All</button>
+      <button class="btn btn-sm" style="background:#dcfce7;color:#16a34a" onclick="filterFees('paid')">Paid</button>
+      <button class="btn btn-sm" style="background:#fef2f2;color:#dc2626" onclick="filterFees('pending')">Pending</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Fee Type</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Receipt No.</th><th>Paid Date</th></tr></thead>
+      <tbody id="feesBody"><tr><td colspan="6" style="text-align:center;padding:40px;color:#94a3b8">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allFees = [];
+
+async function loadFees() {
+  const d  = await api('/student/api/fees');
+  allFees  = d.fees;
+
+  document.getElementById('collected').textContent   = fmtCurrency(d.collected);
+  document.getElementById('pending').textContent     = fmtCurrency(d.pending);
+  document.getElementById('totalRecords').textContent = allFees.length;
+
+  // Pie
+  const paid    = allFees.filter(f=>f.paid).length;
+  const unpaid  = allFees.filter(f=>!f.paid).length;
+  new Chart(document.getElementById('feeStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Paid', 'Pending'],
+      datasets: [{ data: [paid, unpaid], backgroundColor: ['#0284c7','#ef4444'], borderWidth:0 }]
+    },
+    options: { responsive:false, plugins:{ legend:{ position:'bottom', labels:{ boxWidth:12 } } }, cutout:'60%' }
+  });
+
+  // Pending list
+  const pendingFees = allFees.filter(f=>!f.paid);
+  const pList = document.getElementById('pendingList');
+  if (pendingFees.length) {
+    pList.innerHTML = `<div style="font-size:13px;font-weight:700;color:#dc2626;margin-bottom:8px">⚠️ Pending (${pendingFees.length})</div>` +
+      pendingFees.map(f=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px">
+        <span>${f.fee_type}</span><span style="font-weight:700;color:#dc2626">${fmtCurrency(f.amount)}</span>
+      </div>`).join('');
+  } else {
+    pList.innerHTML = '<div style="color:#16a34a;font-size:14px;font-weight:600;text-align:center;padding:16px">✅ All fees paid!</div>';
+  }
+
+  renderTable(allFees);
+}
+
+function filterFees(type) {
+  const filtered = type === 'paid' ? allFees.filter(f=>f.paid) :
+                   type === 'pending' ? allFees.filter(f=>!f.paid) : allFees;
+  renderTable(filtered);
+}
+
+function renderTable(fees) {
+  const tbody = document.getElementById('feesBody');
+  if (!fees.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="icon">💰</div><h4>No fee records</h4></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = fees.map(f => `<tr>
+    <td><span class="badge badge-blue">${f.fee_type}</span></td>
+    <td><strong>${fmtCurrency(f.amount)}</strong></td>
+    <td>${fmtDate(f.due_date)}</td>
+    <td>${f.paid ? '<span class="badge badge-green"><i class="fas fa-check"></i> Paid</span>' : '<span class="badge badge-red"><i class="fas fa-clock"></i> Pending</span>'}</td>
+    <td style="font-family:monospace;font-size:12px">${f.receipt_no||'—'}</td>
+    <td style="color:#64748b;font-size:13px">${f.paid_date ? fmtDate(f.paid_date.split('T')[0]) : '—'}</td>
+  </tr>`).join('');
+}
+
+loadFees();
+</script>
+{% endblock %}

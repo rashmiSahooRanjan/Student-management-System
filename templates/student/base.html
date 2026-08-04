@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Student Panel{% endblock %} — EduNova</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link href="/static/css/panel.css" rel="stylesheet">
+{% block head %}{% endblock %}
+</head>
+<body class="theme-student">
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo"><i class="fas fa-user-graduate"></i></div>
+      <div class="brand-text">
+        <div class="name">EduNova</div>
+        <span class="role-badge">Student Panel</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">My Overview</div>
+      <a href="/student/dashboard"  class="nav-item {% if active=='dashboard'  %}active{% endif %}"><i class="fas fa-tachometer-alt"></i> My Dashboard</a>
+      <a href="/student/profile"    class="nav-item {% if active=='profile'    %}active{% endif %}"><i class="fas fa-id-card"></i> My Profile</a>
+      <div class="nav-section-label" style="margin-top:10px">Academics</div>
+      <a href="/student/attendance" class="nav-item {% if active=='attendance' %}active{% endif %}"><i class="fas fa-calendar-check"></i> My Attendance</a>
+      <a href="/student/marks"      class="nav-item {% if active=='marks'      %}active{% endif %}"><i class="fas fa-chart-bar"></i> My Marks</a>
+      <div class="nav-section-label" style="margin-top:10px">Finance</div>
+      <a href="/student/fees"       class="nav-item {% if active=='fees'       %}active{% endif %}"><i class="fas fa-rupee-sign"></i> My Fees</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">{{ (user_name or 'S')[0].upper() }}</div>
+        <div class="user-details">
+          <div class="uname">{{ user_name }}</div>
+          <div class="uemail">{{ user_email }}</div>
+        </div>
+      </div>
+      <a href="/auth/logout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button onclick="document.getElementById('sidebar').classList.toggle('open')" style="background:none;border:none;font-size:20px;cursor:pointer;color:#64748b"><i class="fas fa-bars"></i></button>
+        <div>
+          <div class="page-title">{% block page_title %}My Dashboard{% endblock %}</div>
+          <div class="page-subtitle">{% block page_subtitle %}Welcome, {{ user_name }}{% endblock %}</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span class="topbar-badge"><i class="fas fa-user-graduate"></i> Student</span>
+      </div>
+    </div>
+    <div class="content">{% block content %}{% endblock %}</div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/panel.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
