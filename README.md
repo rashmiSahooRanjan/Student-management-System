@@ -35,7 +35,7 @@
 ## 🌟 Overview
 
 EduNova is a complete school management platform built with **Flask** and **MongoDB Atlas**. It provides three fully independent panels — each with its own sidebar, dashboard, routes, templates, and permission set. Demo accounts are completely isolated from real accounts using a smart `is_demo` flag system, so you can explore freely without touching production data.
-**Deploy Link:-** https://edu-nova-student-management-system.onrender.com/auth/login
+**Contact :-** [https://portfolio-yxmp.onrender.com/]
 
 ---
 
